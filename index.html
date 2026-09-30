@@ -1,359 +1,1017 @@
-
 <!doctype html>
 <html lang="bg">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#101c2c" />
-  <meta name="description" content="Pavet — учебен проект за по-лесно ориентиране в градския транспорт на София." />
+  <meta
+    name="description"
+    content="Pavet — учебен проект за по-лесно ориентиране в градския транспорт на София."
+  />
+
   <title>Pavet — София е на една крачка</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+
   <link rel="stylesheet" href="transport.css" />
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    defer
+  ></script>
+
   <script src="transport.js" defer></script>
 </head>
 
 <body>
-  <a class="skip-link" href="#main">Премини към съдържанието</a>
 
-  <header class="site-header">
-    <div class="container nav-bar">
-      <a class="brand" href="#nachalo" aria-label="Pavet — начало">
-        <span class="brand-icon" aria-hidden="true">
-          <span></span><span></span><span></span><span></span>
-        </span>
-        <span>pavet<span class="brand-dot">.</span></span>
-      </a>
+<a class="skip-link" href="#main">Премини към съдържанието</a>
 
-      <nav class="main-nav" aria-label="Основна навигация">
-        <a href="#planirane">Маршрут</a>
-        <a href="#transport">Транспорт</a>
-        <a href="#kak-raboti">Как работи</a>
-      </nav>
+<header class="site-header">
+  <div class="container nav-bar">
 
-      <a class="nav-cta" href="#planirane">
-        Планирай пътуване <span aria-hidden="true">↗</span>
-      </a>
-    </div>
-  </header>
+    <a class="brand" href="#nachalo" aria-label="Pavet — начало">
+      <span class="brand-icon" aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+      </span>
 
-  <main id="main">
+      <span>
+        pavet<span class="brand-dot">.</span>
+      </span>
+    </a>
 
-    <!-- HERO SECTION -->
-    <section class="hero" id="nachalo" aria-labelledby="hero-title">
-      <div class="container hero-grid">
+    <nav class="main-nav" aria-label="Основна навигация">
+      <a href="#planirane">Маршрут</a>
+      <a href="#transport">Транспорт</a>
+      <a href="#kak-raboti">Как работи</a>
+    </nav>
 
-        <div class="hero-copy">
-          <div class="eyebrow">
-            <span class="eyebrow-dot"></span>
-            ТВОЯТ ГРАД. ТВОЯТ МАРШРУТ.
-          </div>
+    <a class="nav-cta" href="#planirane">
+      Планирай пътуване
+      <span aria-hidden="true">↗</span>
+    </a>
 
-          <h1 id="hero-title">
-            София е по-близо,<br />
-            когато знаеш <em>накъде.</em>
-          </h1>
+  </div>
+</header>
 
-          <p class="hero-description">
-            Едно място за по-лесно придвижване из града.
-            Избери откъде тръгваш и накъде си се запътил —
-            ние ще ти помогнем да се ориентираш.
-          </p>
 
-          <!-- ROUTE FORM -->
-          <form class="route-form" id="planirane" novalidate>
-            <div class="form-topline">
-              <span class="form-icon" aria-hidden="true">↗</span>
-              <h2>Накъде пътуваме?</h2>
-              <span class="demo-pill">ПРОТОТИП</span>
-            </div>
+<main id="main">
 
-            <div class="route-fields">
-              <div class="route-rail" aria-hidden="true">
-                <span class="rail-start"></span>
-                <span class="rail-line"></span>
-                <span class="rail-end"></span>
-              </div>
+<!-- =========================================================
+     HERO
+========================================================= -->
 
-              <div class="input-stack">
-                <label for="from">Начална точка</label>
-                <input
-                  id="from"
-                  name="from"
-                  list="places"
-                  placeholder="Напр. Сердика"
-                  autocomplete="off"
-                  required
-                />
+<section class="hero" id="nachalo" aria-labelledby="hero-title">
 
-                <label for="to">Крайна точка</label>
-                <input
-                  id="to"
-                  name="to"
-                  list="places"
-                  placeholder="Къде отиваш?"
-                  autocomplete="off"
-                  required
-                />
-              </div>
+  <div class="container hero-grid">
 
-              <button
-                class="swap-btn"
-                type="button"
-                id="swap"
-                aria-label="Размени началната и крайната точка"
-                title="Размени точките"
-              >⇅</button>
+    <div class="hero-copy">
 
-              <datalist id="places">
-                <option value="Сердика"></option>
-                <option value="НДК"></option>
-                <option value="Софийски университет"></option>
-                <option value="Централна гара"></option>
-                <option value="Летище София"></option>
-                <option value="Бизнес парк"></option>
-                <option value="Орлов мост"></option>
-                <option value="Витоша (метростанция)"></option>
-                <option value="Люлин"></option>
-                <option value="Младост 1"></option>
-              </datalist>
-            </div>
-
-            <button class="primary-btn" type="submit">
-              Покажи на картата
-              <span aria-hidden="true">→</span>
-            </button>
-
-            <p class="form-message" id="form-message" role="status" aria-live="polite">
-              Избери две места от предложенията. Засега показваме
-              ориентировъчна права линия, не реален транспортен маршрут.
-            </p>
-          </form>
-
-          <div class="trust-line">
-            <span class="stars" aria-hidden="true">✳</span>
-            Създадено за хората, които се движат из София.
-          </div>
-        </div>
-
-        <!-- MAP -->
-        <div class="visual-column">
-          <div class="map-decoration map-decoration-a" aria-hidden="true"></div>
-          <div class="map-decoration map-decoration-b" aria-hidden="true"></div>
-
-          <div class="map-shell">
-            <div class="map-head">
-              <span class="map-head-label">
-                <span class="live-dot"></span> СОФИЯ, БЪЛГАРИЯ
-              </span>
-              <span class="map-head-right">42.6977° N &nbsp; 23.3219° E</span>
-            </div>
-
-            <div id="map" role="region" aria-label="Интерактивна карта на София">
-              <div class="map-placeholder">
-                Картата се зарежда… За визуализация е необходима интернет връзка.
-              </div>
-            </div>
-
-            <div class="map-bottom">
-              <span>
-                ● <strong id="map-caption">
-                  Избери две точки, за да ги видиш тук
-                </strong>
-              </span>
-              <span class="map-note">ДЕМО КАРТА</span>
-            </div>
-          </div>
-
-          <div class="float-card">
-            <span class="float-icon" aria-hidden="true">⌁</span>
-            <span>
-              <strong>Движи се по-лесно.</strong>
-              <small>Повече град. По-малко чудене.</small>
-            </span>
-            <span class="float-arrow" aria-hidden="true">↗</span>
-          </div>
-        </div>
+      <div class="eyebrow">
+        <span class="eyebrow-dot"></span>
+        ТВОЯТ ГРАД. ТВОЯТ МАРШРУТ.
       </div>
 
-      <div class="hero-bottom container">
-        <span>ОПОЗНАЙ ГРАДА ПО СВОЯ НАЧИН</span>
-        <a href="#transport">Разгледай надолу <span aria-hidden="true">↓</span></a>
-      </div>
-    </section>
+      <h1 id="hero-title">
+        София е по-близо,<br />
+        когато знаеш <em>накъде.</em>
+      </h1>
 
-    <!-- QUICK ROUTES -->
-    <section class="quick-section" aria-labelledby="quick-title">
-      <div class="container">
-        <div class="section-heading">
-          <div>
-            <span class="section-overline">БЪРЗ СТАРТ</span>
-            <h2 id="quick-title">
-              Популярни точки в София<span class="accent-period">.</span>
-            </h2>
-          </div>
-          <p>Изпробвай прототипа с едно натискане.</p>
-        </div>
-
-        <div class="quick-grid">
-          <button class="quick-card" type="button"
-                  data-from="Сердика" data-to="Софийски университет">
-            <span class="quick-number">01 / ЦЕНТЪР</span>
-            <span class="quick-card-main">
-              <span class="quick-symbol">⌖</span>
-              <strong>Сердика → СУ</strong>
-              <span class="quick-arrow" aria-hidden="true">↗</span>
-            </span>
-            <small>Две емблематични точки в сърцето на града</small>
-          </button>
-
-          <button class="quick-card" type="button"
-                  data-from="НДК" data-to="Витоша (метростанция)">
-            <span class="quick-number">02 / ЮЖНА СОФИЯ</span>
-            <span class="quick-card-main">
-              <span class="quick-symbol">⌖</span>
-              <strong>НДК → Витоша</strong>
-              <span class="quick-arrow" aria-hidden="true">↗</span>
-            </span>
-            <small>От центъра към южните квартали</small>
-          </button>
-
-          <button class="quick-card" type="button"
-                  data-from="Централна гара" data-to="Летище София">
-            <span class="quick-number">03 / ПЪТУВАНЕ</span>
-            <span class="quick-card-main">
-              <span class="quick-symbol">⌖</span>
-              <strong>Гара → Летище</strong>
-              <span class="quick-arrow" aria-hidden="true">↗</span>
-            </span>
-            <small>Виж приблизителното разположение на двете точки</small>
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- TRANSPORT -->
-    <section class="transport-section" id="transport" aria-labelledby="transport-title">
-      <div class="container transport-layout">
-        <div class="transport-intro">
-          <span class="section-overline">ГРАДЪТ Е В ДВИЖЕНИЕ</span>
-
-          <h2 id="transport-title">
-            Различни начини.<br /><em>Една София.</em>
-          </h2>
-
-          <p>
-            Pavet е замислен като общо място за ориентиране
-            в обществения транспорт. Това са видовете
-            транспорт, които планираме да включим.
-          </p>
-
-          <a href="#kak-raboti" class="text-link">
-            Научи повече за проекта <span aria-hidden="true">↗</span>
-          </a>
-        </div>
-
-        <div class="transport-grid">
-          <article class="transport-card">
-            <span class="transport-icon metro" aria-hidden="true">M</span>
-            <span class="transport-index">01</span>
-            <h3>Метро</h3>
-            <p>Станции и линии на едно място.</p>
-          </article>
-
-          <article class="transport-card">
-            <span class="transport-icon bus" aria-hidden="true">▣</span>
-            <span class="transport-index">02</span>
-            <h3>Автобуси</h3>
-            <p>Възможности за придвижване в целия град.</p>
-          </article>
-
-          <article class="transport-card">
-            <span class="transport-icon tram" aria-hidden="true">ϟ</span>
-            <span class="transport-index">03</span>
-            <h3>Трамваи</h3>
-            <p>Класическа част от софийското движение.</p>
-          </article>
-
-          <article class="transport-card">
-            <span class="transport-icon trolley" aria-hidden="true">↯</span>
-            <span class="transport-index">04</span>
-            <h3>Тролеи</h3>
-            <p>Още начини да стигнеш до целта.</p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- HOW IT WORKS -->
-    <section class="how-section" id="kak-raboti" aria-labelledby="how-title">
-      <div class="container">
-        <div class="section-heading">
-          <div>
-            <span class="section-overline">ПРОСТО И ЯСНО</span>
-            <h2 id="how-title">
-              Три стъпки. И си на път<span class="accent-period">.</span>
-            </h2>
-          </div>
-        </div>
-
-        <div class="steps">
-          <div class="step">
-            <span class="step-no">01</span>
-            <h3>Посочи откъде</h3>
-            <p>Въведи начална точка от предложените места в София.</p>
-          </div>
-
-          <div class="step">
-            <span class="step-no">02</span>
-            <h3>Избери накъде</h3>
-            <p>Добави крайната точка, до която искаш да стигнеш.</p>
-          </div>
-
-          <div class="step">
-            <span class="step-no">03</span>
-            <h3>Виж на картата</h3>
-            <p>Прототипът показва позициите им. Реалните маршрути са следващ етап.</p>
-          </div>
-        </div>
-
-        <div class="bottom-cta">
-          <div>
-            <span>ГОТОВ ЛИ СИ ЗА ПЪТ?</span>
-            <h2>София те очаква.</h2>
-          </div>
-          <a href="#planirane">
-            Избери маршрут <span aria-hidden="true">↗</span>
-          </a>
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-  <!-- FOOTER -->
-  <footer class="site-footer">
-    <div class="container footer-inner">
-      <a class="brand footer-brand" href="#nachalo">
-        <span class="brand-icon" aria-hidden="true">
-          <span></span><span></span><span></span><span></span>
-        </span>
-        <span>pavet<span class="brand-dot">.</span></span>
-      </a>
-
-      <p>
-        Училищен проект за по-удобна градска мобилност в София.
-        Демонстрационна версия — без данни за движение в реално време.
+      <p class="hero-description">
+        Едно място за по-лесно придвижване из града.
+        Избери откъде тръгваш и накъде си се запътил —
+        Pavet ще ти помогне да намериш подходящ маршрут.
       </p>
 
-      <a href="#nachalo">Нагоре ↑</a>
+
+      <!-- =====================================================
+           ROUTE FORM
+      ====================================================== -->
+
+      <form class="route-form" id="planirane" novalidate>
+
+        <div class="form-topline">
+
+          <span class="form-icon" aria-hidden="true">↗</span>
+
+          <h2>Накъде пътуваме?</h2>
+
+          <span class="demo-pill">
+            ПРОТОТИП
+          </span>
+
+        </div>
+
+
+        <!-- LOCATION BUTTON -->
+
+        <button
+          class="location-btn"
+          type="button"
+          id="use-location"
+        >
+          <span class="location-icon" aria-hidden="true">⌖</span>
+
+          <span>
+            <strong>Използвай текущото ми местоположение</strong>
+            <small id="location-status">
+              Ще използваме GPS позицията на устройството.
+            </small>
+          </span>
+        </button>
+
+
+        <!-- FROM / TO -->
+
+        <div class="route-fields">
+
+          <div class="route-rail" aria-hidden="true">
+
+            <span class="rail-start"></span>
+
+            <span class="rail-line"></span>
+
+            <span class="rail-end"></span>
+
+          </div>
+
+
+          <div class="input-stack">
+
+            <label for="from">
+              Начална точка
+            </label>
+
+            <input
+              id="from"
+              name="from"
+              list="places"
+              placeholder="Напр. Сердика"
+              autocomplete="off"
+              required
+            />
+
+
+            <label for="to">
+              Крайна точка
+            </label>
+
+            <input
+              id="to"
+              name="to"
+              list="places"
+              placeholder="Къде отиваш?"
+              autocomplete="off"
+              required
+            />
+
+          </div>
+
+
+          <button
+            class="swap-btn"
+            type="button"
+            id="swap"
+            aria-label="Размени началната и крайната точка"
+            title="Размени точките"
+          >
+            ⇅
+          </button>
+
+
+          <datalist id="places">
+
+            <option value="Сердика"></option>
+            <option value="НДК"></option>
+            <option value="Софийски университет"></option>
+            <option value="Централна гара"></option>
+            <option value="Летище София"></option>
+            <option value="Бизнес парк"></option>
+            <option value="Орлов мост"></option>
+            <option value="Витоша (метростанция)"></option>
+            <option value="Люлин"></option>
+            <option value="Младост 1"></option>
+
+          </datalist>
+
+        </div>
+
+
+        <!-- ===================================================
+             TRANSPORT SWITCHES
+        ==================================================== -->
+
+        <div class="route-options">
+
+          <div class="options-title-row">
+
+            <div>
+              <span class="options-label">
+                НАЧИН НА ПРИДВИЖВАНЕ
+              </span>
+
+              <strong>
+                Избери транспорт
+              </strong>
+            </div>
+
+            <span
+              class="selected-transport-count"
+              id="selected-transport-count"
+            >
+              2 избрани
+            </span>
+
+          </div>
+
+
+          <div
+            class="transport-switches"
+            role="group"
+            aria-label="Избор на транспорт"
+          >
+
+            <!-- WALK -->
+
+            <label class="transport-switch walk-switch">
+
+              <input
+                type="checkbox"
+                class="transport-checkbox"
+                value="walk"
+                checked
+              />
+
+              <span class="switch-content">
+
+                <span class="switch-icon">
+                  🚶
+                </span>
+
+                <span class="switch-text">
+                  <strong>Пеша</strong>
+                  <small>Ходене</small>
+                </span>
+
+              </span>
+
+              <span class="switch-toggle">
+                <span></span>
+              </span>
+
+            </label>
+
+
+            <!-- METRO -->
+
+            <label class="transport-switch metro-switch">
+
+              <input
+                type="checkbox"
+                class="transport-checkbox"
+                value="metro"
+                checked
+              />
+
+              <span class="switch-content">
+
+                <span class="switch-icon">
+                  M
+                </span>
+
+                <span class="switch-text">
+                  <strong>Метро</strong>
+                  <small>Метрополитен</small>
+                </span>
+
+              </span>
+
+              <span class="switch-toggle">
+                <span></span>
+              </span>
+
+            </label>
+
+
+            <!-- BUS -->
+
+            <label class="transport-switch bus-switch">
+
+              <input
+                type="checkbox"
+                class="transport-checkbox"
+                value="bus"
+              />
+
+              <span class="switch-content">
+
+                <span class="switch-icon">
+                  🚌
+                </span>
+
+                <span class="switch-text">
+                  <strong>Автобус</strong>
+                  <small>Градски линии</small>
+                </span>
+
+              </span>
+
+              <span class="switch-toggle">
+                <span></span>
+              </span>
+
+            </label>
+
+
+            <!-- TRAM -->
+
+            <label class="transport-switch tram-switch">
+
+              <input
+                type="checkbox"
+                class="transport-checkbox"
+                value="tram"
+              />
+
+              <span class="switch-content">
+
+                <span class="switch-icon">
+                  🚋
+                </span>
+
+                <span class="switch-text">
+                  <strong>Трамвай</strong>
+                  <small>Трамвайни линии</small>
+                </span>
+
+              </span>
+
+              <span class="switch-toggle">
+                <span></span>
+              </span>
+
+            </label>
+
+
+            <!-- TROLLEY -->
+
+            <label class="transport-switch trolley-switch">
+
+              <input
+                type="checkbox"
+                class="transport-checkbox"
+                value="trolley"
+              />
+
+              <span class="switch-content">
+
+                <span class="switch-icon">
+                  ⚡
+                </span>
+
+                <span class="switch-text">
+                  <strong>Тролей</strong>
+                  <small>Тролейбусни линии</small>
+                </span>
+
+              </span>
+
+              <span class="switch-toggle">
+                <span></span>
+              </span>
+
+            </label>
+
+          </div>
+
+
+          <!-- PUBLIC TRANSPORT PREFERENCE -->
+
+          <label class="preference-switch">
+
+            <span class="preference-info">
+
+              <span class="preference-icon">
+                ★
+              </span>
+
+              <span>
+                <strong>
+                  Предпочитай градски транспорт
+                </strong>
+
+                <small>
+                  Използвай градски транспорт винаги когато е възможно.
+                </small>
+              </span>
+
+            </span>
+
+
+            <input
+              type="checkbox"
+              id="prefer-public-transport"
+              checked
+            />
+
+            <span class="big-switch">
+              <span></span>
+            </span>
+
+          </label>
+
+        </div>
+
+
+        <button
+          class="primary-btn"
+          type="submit"
+        >
+          Покажи маршрута
+          <span aria-hidden="true">→</span>
+        </button>
+
+
+        <p
+          class="form-message"
+          id="form-message"
+          role="status"
+          aria-live="polite"
+        >
+          Избери две места и начин на придвижване.
+        </p>
+
+      </form>
+
+
+      <div class="trust-line">
+
+        <span class="stars" aria-hidden="true">
+          ✳
+        </span>
+
+        Създадено за хората, които се движат из София.
+
+      </div>
+
     </div>
-  </footer>
+
+
+    <!-- =====================================================
+         MAP
+    ====================================================== -->
+
+    <div class="visual-column">
+
+      <div
+        class="map-decoration map-decoration-a"
+        aria-hidden="true"
+      ></div>
+
+      <div
+        class="map-decoration map-decoration-b"
+        aria-hidden="true"
+      ></div>
+
+
+      <div class="map-shell">
+
+        <div class="map-head">
+
+          <span class="map-head-label">
+
+            <span class="live-dot"></span>
+
+            СОФИЯ, БЪЛГАРИЯ
+
+          </span>
+
+          <span class="map-head-right">
+            42.6977° N &nbsp; 23.3219° E
+          </span>
+
+        </div>
+
+
+        <div
+          id="map"
+          role="region"
+          aria-label="Интерактивна карта на София"
+        >
+
+          <div class="map-placeholder">
+            Картата се зарежда…
+          </div>
+
+        </div>
+
+
+        <div class="map-bottom">
+
+          <span>
+
+            ●
+
+            <strong id="map-caption">
+              Избери две точки, за да видиш маршрута
+            </strong>
+
+          </span>
+
+          <span class="map-note">
+            PAVET MAP
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <div class="float-card">
+
+        <span class="float-icon" aria-hidden="true">
+          ⌁
+        </span>
+
+        <span>
+
+          <strong>
+            Движи се по-лесно.
+          </strong>
+
+          <small>
+            Повече град. По-малко чудене.
+          </small>
+
+        </span>
+
+        <span class="float-arrow" aria-hidden="true">
+          ↗
+        </span>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div class="hero-bottom container">
+
+    <span>
+      ОПОЗНАЙ ГРАДА ПО СВОЯ НАЧИН
+    </span>
+
+    <a href="#transport">
+      Разгледай надолу
+      <span aria-hidden="true">↓</span>
+    </a>
+
+  </div>
+
+</section>
+
+
+<!-- =========================================================
+     QUICK ROUTES
+========================================================= -->
+
+<section
+  class="quick-section"
+  aria-labelledby="quick-title"
+>
+
+  <div class="container">
+
+    <div class="section-heading">
+
+      <div>
+
+        <span class="section-overline">
+          БЪРЗ СТАРТ
+        </span>
+
+        <h2 id="quick-title">
+          Популярни точки в София
+          <span class="accent-period">.</span>
+        </h2>
+
+      </div>
+
+      <p>
+        Изпробвай маршрута с едно натискане.
+      </p>
+
+    </div>
+
+
+    <div class="quick-grid">
+
+      <button
+        class="quick-card"
+        type="button"
+        data-from="Сердика"
+        data-to="Софийски университет"
+      >
+
+        <span class="quick-number">
+          01 / ЦЕНТЪР
+        </span>
+
+        <span class="quick-card-main">
+
+          <span class="quick-symbol">
+            ⌖
+          </span>
+
+          <strong>
+            Сердика → СУ
+          </strong>
+
+          <span class="quick-arrow">
+            ↗
+          </span>
+
+        </span>
+
+        <small>
+          Две емблематични точки в сърцето на града
+        </small>
+
+      </button>
+
+
+      <button
+        class="quick-card"
+        type="button"
+        data-from="НДК"
+        data-to="Витоша (метростанция)"
+      >
+
+        <span class="quick-number">
+          02 / ЮЖНА СОФИЯ
+        </span>
+
+        <span class="quick-card-main">
+
+          <span class="quick-symbol">
+            ⌖
+          </span>
+
+          <strong>
+            НДК → Витоша
+          </strong>
+
+          <span class="quick-arrow">
+            ↗
+          </span>
+
+        </span>
+
+        <small>
+          От центъра към южните квартали
+        </small>
+
+      </button>
+
+
+      <button
+        class="quick-card"
+        type="button"
+        data-from="Централна гара"
+        data-to="Летище София"
+      >
+
+        <span class="quick-number">
+          03 / ПЪТУВАНЕ
+        </span>
+
+        <span class="quick-card-main">
+
+          <span class="quick-symbol">
+            ⌖
+          </span>
+
+          <strong>
+            Гара → Летище
+          </strong>
+
+          <span class="quick-arrow">
+            ↗
+          </span>
+
+        </span>
+
+        <small>
+          Пътуване между две важни точки
+        </small>
+
+      </button>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =========================================================
+     TRANSPORT
+========================================================= -->
+
+<section
+  class="transport-section"
+  id="transport"
+  aria-labelledby="transport-title"
+>
+
+  <div class="container transport-layout">
+
+    <div class="transport-intro">
+
+      <span class="section-overline">
+        ГРАДЪТ Е В ДВИЖЕНИЕ
+      </span>
+
+      <h2 id="transport-title">
+        Различни начини.<br />
+        <em>Една София.</em>
+      </h2>
+
+      <p>
+        Pavet позволява комбиниране на различни видове
+        транспорт според предпочитанията на пътуващия.
+      </p>
+
+      <a
+        href="#kak-raboti"
+        class="text-link"
+      >
+        Научи повече за проекта
+        <span aria-hidden="true">↗</span>
+      </a>
+
+    </div>
+
+
+    <div class="transport-grid">
+
+      <article class="transport-card">
+
+        <span class="transport-icon metro">
+          M
+        </span>
+
+        <span class="transport-index">
+          01
+        </span>
+
+        <h3>
+          Метро
+        </h3>
+
+        <p>
+          Бързо придвижване между кварталите.
+        </p>
+
+      </article>
+
+
+      <article class="transport-card">
+
+        <span class="transport-icon bus">
+          ▣
+        </span>
+
+        <span class="transport-index">
+          02
+        </span>
+
+        <h3>
+          Автобуси
+        </h3>
+
+        <p>
+          Възможности за придвижване в целия град.
+        </p>
+
+      </article>
+
+
+      <article class="transport-card">
+
+        <span class="transport-icon tram">
+          ϟ
+        </span>
+
+        <span class="transport-index">
+          03
+        </span>
+
+        <h3>
+          Трамваи
+        </h3>
+
+        <p>
+          Класическа част от софийското движение.
+        </p>
+
+      </article>
+
+
+      <article class="transport-card">
+
+        <span class="transport-icon trolley">
+          ↯
+        </span>
+
+        <span class="transport-index">
+          04
+        </span>
+
+        <h3>
+          Тролеи
+        </h3>
+
+        <p>
+          Още начини да стигнеш до целта.
+        </p>
+
+      </article>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =========================================================
+     HOW IT WORKS
+========================================================= -->
+
+<section
+  class="how-section"
+  id="kak-raboti"
+  aria-labelledby="how-title"
+>
+
+  <div class="container">
+
+    <div class="section-heading">
+
+      <div>
+
+        <span class="section-overline">
+          ПРОСТО И ЯСНО
+        </span>
+
+        <h2 id="how-title">
+          Три стъпки. И си на път
+          <span class="accent-period">.</span>
+        </h2>
+
+      </div>
+
+    </div>
+
+
+    <div class="steps">
+
+      <div class="step">
+
+        <span class="step-no">
+          01
+        </span>
+
+        <h3>
+          Посочи откъде
+        </h3>
+
+        <p>
+          Избери начална точка или използвай
+          текущото си местоположение.
+        </p>
+
+      </div>
+
+
+      <div class="step">
+
+        <span class="step-no">
+          02
+        </span>
+
+        <h3>
+          Избери накъде
+        </h3>
+
+        <p>
+          Добави крайната точка и избери
+          предпочитаните видове транспорт.
+        </p>
+
+      </div>
+
+
+      <div class="step">
+
+        <span class="step-no">
+          03
+        </span>
+
+        <h3>
+          Виж маршрута
+        </h3>
+
+        <p>
+          Pavet комбинира ходене и градски транспорт,
+          когато тази опция е активна.
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <div class="bottom-cta">
+
+      <div>
+
+        <span>
+          ГОТОВ ЛИ СИ ЗА ПЪТ?
+        </span>
+
+        <h2>
+          София те очаква.
+        </h2>
+
+      </div>
+
+      <a href="#planirane">
+        Избери маршрут
+        <span aria-hidden="true">↗</span>
+      </a>
+
+    </div>
+
+  </div>
+
+</section>
+
+</main>
+
+
+<footer class="site-footer">
+
+  <div class="container footer-inner">
+
+    <a
+      class="brand footer-brand"
+      href="#nachalo"
+    >
+
+      <span class="brand-icon" aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+      </span>
+
+      <span>
+        pavet<span class="brand-dot">.</span>
+      </span>
+
+    </a>
+
+
+    <p>
+      Училищен проект за по-удобна градска мобилност
+      в София. Демонстрационна версия.
+    </p>
+
+
+    <a href="#nachalo">
+      Нагоре ↑
+    </a>
+
+  </div>
+
+</footer>
+
 </body>
 </html>
