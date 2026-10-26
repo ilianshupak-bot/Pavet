@@ -4,7 +4,7 @@
   "description": "Live Sofia public transport map",
   "private": true,
   "scripts": {
-    "build": "esbuild src/app.js --bundle --format=iife --minify --outfile=transport.js",
+    "build": "node scripts/build.cjs",
     "update-routes": "node scripts/make-routes.cjs"
   },
   "repository": {
@@ -19,7 +19,8 @@
   },
   "homepage": "https://github.com/ilianshupak-bot/Pavet#readme",
   "dependencies": {
-    "gtfs-realtime-bindings": "^2.2.0"
+    "gtfs-realtime-bindings": "^2.2.0",
+    "maplibre-gl": "^6.16.0"
   },
   "devDependencies": {
     "adm-zip": "^0.6.1",

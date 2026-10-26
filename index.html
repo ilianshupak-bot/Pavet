@@ -9,12 +9,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.16.0/dist/maplibre-gl.css">
   <link rel="stylesheet" href="transport.css">
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
-  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" defer></script>
   <script src="transport.js" defer></script>
 </head>
 <body>
@@ -26,6 +22,22 @@
   </header>
 
   <main id="main" class="app-layout">
+    <section class="map-area" id="live-map" aria-label="Карта на градския транспорт">
+      <div id="map" role="application" aria-label="Интерактивна карта на София"></div>
+      <div class="map-topbar">
+        <div class="live-status" id="live-status" role="status" aria-live="polite"><span class="status-dot"></span><strong>Свързване…</strong><small>Зареждаме позициите</small></div>
+        <div class="map-actions">
+          <button class="stop-toggle" id="toggle-stops" type="button" aria-pressed="true" title="Покажи или скрий спирките и станциите"><span class="stop-toggle-icon" aria-hidden="true"></span><strong>Спирки и станции</strong></button>
+          <button class="reset-view" id="reset-view" type="button" title="Покажи София">Покажи София <span aria-hidden="true">↗</span></button>
+        </div>
+      </div>
+      <div class="map-bottom-panel">
+        <div class="panel-title"><div><span class="panel-kicker">В ПОТОКА</span><strong id="vehicle-count">—</strong></div><button id="refresh" type="button" aria-label="Обнови позициите" title="Обнови позициите">↻</button></div>
+        <p id="data-message">Позициите се обновяват автоматично на всеки 30 секунди.</p>
+        <div class="count-grid"><span><i class="count-dot bus"></i> Автобуси <b id="bus-count">—</b></span><span><i class="count-dot tram"></i> Трамваи <b id="tram-count">—</b></span><span><i class="count-dot trolley"></i> Тролеи <b id="trolley-count">—</b></span></div>
+        <p class="stop-hint"><span class="hint-metro">M</span> Метростанции <span class="hint-stop"></span> Спирки при приближаване</p>
+      </div>
+    </section>
     <aside class="sidebar" id="planner">
       <div class="sidebar-main">
         <h1>София<br><em>в движение.</em></h1>
@@ -46,23 +58,11 @@
         </div>
         <label class="line-label" for="line-filter">Номер на линия</label>
         <div class="line-filter-wrap"><input id="line-filter" placeholder="Всички линии" autocomplete="off"><button id="clear-line" type="button" aria-label="Изчисти линията" hidden>×</button></div>
-        <div class="metro-note"><span class="metro-mark" aria-hidden="true">M</span><div><strong>Метро</strong><p>Официалният поток не публикува позиции на влаковете. Можеш да намериш метростанция на картата.</p></div></div>
+        <div class="metro-note"><span class="metro-mark" aria-hidden="true">M</span><div><strong>Метростанции на картата</strong><p>Показваме станциите от официалните данни. Позиции на метро влакове не се публикуват в потока на живо.</p></div></div>
       </div>
       <div class="sidebar-foot">Данни: <a href="https://www.sofiatraffic.bg/bg/info-center/danni" target="_blank" rel="noopener noreferrer">Център за градска мобилност ↗</a><br>GTFS Realtime · CC BY 4.0</div>
     </aside>
 
-    <section class="map-area" id="live-map" aria-label="Карта на градския транспорт">
-      <div id="map" role="application" aria-label="Интерактивна карта на София"></div>
-      <div class="map-topbar">
-        <div class="live-status" id="live-status" role="status" aria-live="polite"><span class="status-dot"></span><strong>Свързване…</strong><small>Зареждаме позициите</small></div>
-        <button class="reset-view" id="reset-view" type="button" title="Покажи София">Покажи София <span aria-hidden="true">↗</span></button>
-      </div>
-      <div class="map-bottom-panel">
-        <div class="panel-title"><div><span class="panel-kicker">В ПОТОКА</span><strong id="vehicle-count">—</strong></div><button id="refresh" type="button" aria-label="Обнови позициите" title="Обнови позициите">↻</button></div>
-        <p id="data-message">Позициите се обновяват автоматично на всеки 30 секунди.</p>
-        <div class="count-grid"><span><i class="count-dot bus"></i> Автобуси <b id="bus-count">—</b></span><span><i class="count-dot tram"></i> Трамваи <b id="tram-count">—</b></span><span><i class="count-dot trolley"></i> Тролеи <b id="trolley-count">—</b></span></div>
-      </div>
-    </section>
   </main>
 </body>
 </html>
