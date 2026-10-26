@@ -722,6 +722,7 @@ $('#journey-from').addEventListener('input', () => $('#use-location').classList.
 
 $('#journey-form').addEventListener('submit', async event => {
   event.preventDefault();
+  clearJourney();
   const message = $('#journey-message');
   const button = $('#journey-submit');
   button.disabled = true;
@@ -805,7 +806,13 @@ for (const routeId of Object.keys(routes).sort((a, b) => lineLabel(a).localeComp
 }
 $('#line-search').addEventListener('submit', event => {
   event.preventDefault();
-  const query = $('#line-filter').value.trim().toLocaleLowerCase('bg-BG');
+  const enteredLine = $('#line-filter').value.trim();
+  const query = enteredLine.toLocaleLowerCase('bg-BG');
+  if (selectedRouteId) {
+    clearRoute();
+    $('#line-filter').value = enteredLine;
+    $('#clear-line').hidden = !enteredLine;
+  }
   const choices = $('#line-choices');
   choices.replaceChildren();
   const matching = Object.keys(routes).filter(id =>
