@@ -4,6 +4,7 @@ import routes from './routes.json';
 import stopRows from './stops.json';
 import stopLines from './stop-lines.json';
 import { buildJourneyNetwork, findJourney } from './journey.mjs';
+import { photonSearchUrl, placeFromPhoton } from './geocode.mjs';
 
 maplibregl.setWorkerUrl(new URL(
   `./maplibre-gl-worker.mjs?v=${maplibregl.getVersion()}`,
@@ -662,26 +663,51 @@ for (const row of stopRows) {
   if (!journeyLookup.has(normalizePlace(row[2]))) journeyLookup.set(normalizePlace(row[2]), { name: row[2], point });
 }
 
+const geocodeCache = new Map();
+async function resolveJourneyPlace(value) {
+  const query = normalizePlace(value);
+  const local = journeyLookup.get(query) || geocodeCache.get(query);
+  if (local) return local;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 9000);
+  try {
+    const response = await fetch(photonSearchUrl(value), { signal: controller.signal });
+    if (!response.ok) throw new Error(`Address search returned ${response.status}`);
+    const data = await response.json();
+    const result = data.features?.map(placeFromPhoton).find(Boolean) || null;
+    if (result) geocodeCache.set(query, result);
+    return result;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 $('#journey-form').addEventListener('submit', async event => {
   event.preventDefault();
-  const origin = journeyLookup.get(normalizePlace($('#journey-from').value));
-  const destination = journeyLookup.get(normalizePlace($('#journey-to').value));
   const message = $('#journey-message');
-  if (!origin || !destination) {
-    message.textContent = 'Избери начало и край от предложенията.';
-    message.classList.add('error');
-    return;
-  }
-  if (Math.abs(origin.point[0] - destination.point[0]) + Math.abs(origin.point[1] - destination.point[1]) < 0.0002) {
-    message.textContent = 'Избери две различни места.';
-    message.classList.add('error');
-    return;
-  }
   const button = $('#journey-submit');
   button.disabled = true;
   message.classList.remove('error');
-  message.textContent = 'Търсим път по публикуваните линии…';
+  message.textContent = 'Търсим местата и подходящ път…';
   try {
+    const origin = await resolveJourneyPlace($('#journey-from').value);
+    if (!origin) {
+      message.textContent = 'Не открихме началното място в София. Опитай с по-точен адрес или спирка.';
+      message.classList.add('error');
+      return;
+    }
+    const destination = await resolveJourneyPlace($('#journey-to').value);
+    if (!destination) {
+      message.textContent = 'Не открихме крайната точка в София. Опитай с по-точен адрес или място.';
+      message.classList.add('error');
+      return;
+    }
+    if (Math.abs(origin.point[0] - destination.point[0]) + Math.abs(origin.point[1] - destination.point[1]) < 0.0002) {
+      message.textContent = 'Избери две различни места.';
+      message.classList.add('error');
+      return;
+    }
+    message.textContent = 'Търсим път по публикуваните линии…';
     const paths = await getRoutePaths();
     if (!journeyNetwork) journeyNetwork = buildJourneyNetwork(paths, stopRows, routes);
     const result = findJourney(journeyNetwork, origin, destination);
@@ -695,7 +721,7 @@ $('#journey-form').addEventListener('submit', async event => {
     showJourney(origin, destination, result);
   } catch (error) {
     console.warn('Pavet journey planner:', error);
-    message.textContent = 'Маршрутът не можа да се зареди. Опитай отново.';
+    message.textContent = 'Търсенето не е достъпно в момента. Опитай отново след малко.';
     message.classList.add('error');
   } finally {
     button.disabled = false;

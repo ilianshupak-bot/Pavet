@@ -45,15 +45,15 @@
         <div class="section-heading journey-heading"><span>01 / ТВОЯТ ПЪТ</span><h2>От място до място</h2></div>
         <form id="journey-form" class="journey-form">
           <label for="journey-from">Начало</label>
-          <div class="journey-field"><span class="journey-point a" aria-hidden="true">A</span><input id="journey-from" list="journey-options" placeholder="Напр. Център (Сердика)" autocomplete="off" required></div>
+          <div class="journey-field"><span class="journey-point a" aria-hidden="true">A</span><input id="journey-from" list="journey-options" placeholder="Метростанция Обеля или адрес" autocomplete="off" required></div>
           <button type="button" id="swap-journey" class="swap-journey" aria-label="Размени начало и край" title="Размени начало и край">⇅</button>
           <label for="journey-to">Край</label>
-          <div class="journey-field"><span class="journey-point b" aria-hidden="true">B</span><input id="journey-to" list="journey-options" placeholder="Напр. Mall of Sofia" autocomplete="off" required></div>
+          <div class="journey-field"><span class="journey-point b" aria-hidden="true">B</span><input id="journey-to" list="journey-options" placeholder="Място или адрес в София" autocomplete="off" required></div>
           <datalist id="journey-options"></datalist>
           <button id="journey-submit" type="submit" class="primary-button">Намери маршрут <span aria-hidden="true">→</span></button>
         </form>
         <button type="button" id="journey-example" class="journey-example">Пробвай: Център → Mall of Sofia <span aria-hidden="true">↗</span></button>
-        <p id="journey-message" class="field-message" role="status" aria-live="polite">Избери начало и край от предложенията.</p>
+        <p id="journey-message" class="field-message" role="status" aria-live="polite">Въведи спирка, място или адрес. Адресите се търсят чрез OpenStreetMap.</p>
         <div id="journey-result" class="journey-result" hidden></div>
         <div class="section-heading place-heading"><span>02 / НАВИГАЦИЯ</span><h2>Намери място</h2></div>
         <form id="place-form" class="place-form">
@@ -81,7 +81,7 @@
           <div id="route-result" class="route-result" hidden></div>
         <div class="metro-note"><span class="metro-mark" aria-hidden="true">M</span><div><strong>Метростанции на картата</strong><p>Показваме станциите от официалните данни. Позиции на метро влакове не се публикуват в потока на живо.</p></div></div>
       </div>
-      <div class="sidebar-foot">Данни: <a href="https://www.sofiatraffic.bg/bg/info-center/danni" target="_blank" rel="noopener noreferrer">Център за градска мобилност ↗</a><br>GTFS Realtime · CC BY 4.0</div>
+      <div class="sidebar-foot">Данни: <a href="https://www.sofiatraffic.bg/bg/info-center/danni" target="_blank" rel="noopener noreferrer">Център за градска мобилност ↗</a><br>GTFS Realtime · CC BY 4.0<br>Адреси: <a href="https://photon.komoot.io/" target="_blank" rel="noopener noreferrer">Photon</a> · © OpenStreetMap</div>
     </aside>
 
   </main>
