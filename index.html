@@ -56,8 +56,16 @@
           <label class="filter-pill tram"><input type="checkbox" value="tram" checked><span class="filter-swatch"></span>Трамваи</label>
           <label class="filter-pill trolley"><input type="checkbox" value="trolley" checked><span class="filter-swatch"></span>Тролеи</label>
         </div>
-        <label class="line-label" for="line-filter">Номер на линия</label>
-        <div class="line-filter-wrap"><input id="line-filter" placeholder="Всички линии" autocomplete="off"><button id="clear-line" type="button" aria-label="Изчисти линията" hidden>×</button></div>
+          <div class="section-heading route-heading"><span>03 / МАРШРУТИ</span><h2>Потърси линия</h2></div>
+          <form id="line-search" class="line-search">
+            <label class="line-label" for="line-filter">Номер или вид транспорт</label>
+            <div class="line-filter-wrap"><input id="line-filter" list="line-options" placeholder="Напр. Трамвай 5 или 94" autocomplete="off" required><button id="clear-line" type="button" aria-label="Изчисти линията" hidden>×</button></div>
+            <datalist id="line-options"></datalist>
+            <button class="line-search-button" type="submit">Покажи маршрута <span aria-hidden="true">→</span></button>
+          </form>
+          <p id="line-message" class="field-message" role="status" aria-live="polite">Избери линия, за да видиш маршрута ѝ.</p>
+          <div id="line-choices" class="line-choices"></div>
+          <div id="route-result" class="route-result" hidden></div>
         <div class="metro-note"><span class="metro-mark" aria-hidden="true">M</span><div><strong>Метростанции на картата</strong><p>Показваме станциите от официалните данни. Позиции на метро влакове не се публикуват в потока на живо.</p></div></div>
       </div>
       <div class="sidebar-foot">Данни: <a href="https://www.sofiatraffic.bg/bg/info-center/danni" target="_blank" rel="noopener noreferrer">Център за градска мобилност ↗</a><br>GTFS Realtime · CC BY 4.0</div>
