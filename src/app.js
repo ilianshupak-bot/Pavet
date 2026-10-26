@@ -4,7 +4,7 @@ import routes from './routes.json';
 import stopRows from './stops.json';
 import stopLines from './stop-lines.json';
 import { buildJourneyNetwork, findJourney } from './journey.mjs';
-import { photonSearchUrl, placeFromPhoton } from './geocode.mjs';
+import { isInServiceArea, photonSearchUrl, placeFromPhoton } from './geocode.mjs';
 
 maplibregl.setWorkerUrl(new URL(
   `./maplibre-gl-worker.mjs?v=${maplibregl.getVersion()}`,
@@ -74,6 +74,7 @@ let selectedRouteId = null;
 let selectedVariantIndex = 0;
 let journeyNetwork = null;
 let selectedJourney = null;
+let locationMarker = null;
 
 function iconSvg(mode) {
   const colors = { bus: '#e4b91b', tram: '#e87540', trolley: '#4689bc', metro: '#634ab8' };
@@ -664,6 +665,7 @@ for (const row of stopRows) {
 }
 
 const geocodeCache = new Map();
+const locationName = 'Моето местоположение';
 async function resolveJourneyPlace(value) {
   const query = normalizePlace(value);
   const local = journeyLookup.get(query) || geocodeCache.get(query);
@@ -681,6 +683,42 @@ async function resolveJourneyPlace(value) {
     clearTimeout(timeout);
   }
 }
+
+$('#use-location').addEventListener('click', () => {
+  const button = $('#use-location');
+  const message = $('#journey-message');
+  if (!navigator.geolocation) {
+    message.textContent = 'Този браузър не поддържа достъп до местоположение.';
+    message.classList.add('error');
+    return;
+  }
+  button.disabled = true;
+  message.classList.remove('error');
+  message.textContent = 'Определяме местоположението ти…';
+  navigator.geolocation.getCurrentPosition(position => {
+    button.disabled = false;
+    const point = [position.coords.longitude, position.coords.latitude];
+    if (!isInServiceArea(point)) {
+      message.textContent = 'Местоположението е извън района на маршрутите в София.';
+      message.classList.add('error');
+      return;
+    }
+    journeyLookup.set(normalizePlace(locationName), { name: locationName, point });
+    $('#journey-from').value = locationName;
+    button.classList.add('active');
+    message.textContent = 'Местоположението е зададено като начало. Въведи крайна точка.';
+    if (!locationMarker) locationMarker = new maplibregl.Marker({ color: '#26779c' }).addTo(map);
+    locationMarker.setLngLat(point);
+    map.flyTo({ center: point, zoom: 15, essential: true });
+  }, error => {
+    button.disabled = false;
+    message.textContent = error.code === 1
+      ? 'Достъпът до местоположение е отказан. Разреши го в браузъра или въведи начало ръчно.'
+      : 'Не успяхме да определим местоположението. Въведи начало ръчно.';
+    message.classList.add('error');
+  }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 });
+});
+$('#journey-from').addEventListener('input', () => $('#use-location').classList.remove('active'));
 
 $('#journey-form').addEventListener('submit', async event => {
   event.preventDefault();
@@ -731,10 +769,12 @@ $('#swap-journey').addEventListener('click', () => {
   const from = $('#journey-from').value;
   $('#journey-from').value = $('#journey-to').value;
   $('#journey-to').value = from;
+  $('#use-location').classList.toggle('active', $('#journey-from').value === locationName);
 });
 $('#journey-example').addEventListener('click', () => {
   $('#journey-from').value = 'Център (Сердика)';
   $('#journey-to').value = 'Mall of Sofia';
+  $('#use-location').classList.remove('active');
   $('#journey-form').requestSubmit();
 });
 

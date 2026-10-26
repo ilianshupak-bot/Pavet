@@ -3,6 +3,13 @@
 // elsewhere in Bulgaria cannot silently become the destination.
 const SOFIA_BBOX = [23.13, 42.57, 23.58, 42.83];
 
+export function isInServiceArea(point) {
+  return Array.isArray(point) && point.length >= 2 &&
+    point.slice(0, 2).every(Number.isFinite) &&
+    point[0] >= SOFIA_BBOX[0] && point[0] <= SOFIA_BBOX[2] &&
+    point[1] >= SOFIA_BBOX[1] && point[1] <= SOFIA_BBOX[3];
+}
+
 export function photonSearchUrl(query) {
   const url = new URL('https://photon.komoot.io/api/');
   url.search = new URLSearchParams({
@@ -18,10 +25,7 @@ export function photonSearchUrl(query) {
 
 export function placeFromPhoton(feature) {
   const point = feature?.geometry?.coordinates;
-  if (!Array.isArray(point) || point.length < 2 ||
-      !point.slice(0, 2).every(Number.isFinite) ||
-      point[0] < SOFIA_BBOX[0] || point[0] > SOFIA_BBOX[2] ||
-      point[1] < SOFIA_BBOX[1] || point[1] > SOFIA_BBOX[3]) return null;
+  if (!isInServiceArea(point)) return null;
   const info = feature.properties || {};
   const address = [info.street, info.housenumber].filter(Boolean).join(' ');
   const title = info.name || address;
