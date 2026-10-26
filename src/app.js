@@ -3,6 +3,7 @@ import GtfsRealtimeBindings from 'gtfs-realtime-bindings';
 import routes from './routes.json';
 import stopRows from './stops.json';
 import stopLines from './stop-lines.json';
+import { buildJourneyNetwork, findJourney } from './journey.mjs';
 
 maplibregl.setWorkerUrl(new URL(
   `./maplibre-gl-worker.mjs?v=${maplibregl.getVersion()}`,
@@ -23,6 +24,16 @@ const escapeHtml = value => String(value).replace(/[&<>"']/g, character => ({
 const PLACES = [
   ['Орлов мост', 23.3375, 42.6902], ['НДК', 23.3186, 42.6868],
   ['Централна гара', 23.3203, 42.7116]
+];
+const JOURNEY_PLACES = [
+  { name: 'Център (Сердика)', point: [23.321358, 42.697796], aliases: ['център', 'center', 'сердика'] },
+  { name: 'Mall of Sofia', point: [23.308529, 42.69819], aliases: ['мол софия'] },
+  { name: 'Paradise Center', point: [23.314795, 42.657873], aliases: ['парадайс', 'парадайс център'] },
+  { name: 'Serdika Center', point: [23.353587, 42.691621], aliases: ['сердика център'] },
+  { name: 'The Mall', point: [23.383095, 42.660733], aliases: ['молът', 'the mall sofia'] },
+  { name: 'Sofia Ring Mall', point: [23.352767, 42.624256], aliases: ['ринг мол', 'софия ринг мол'] },
+  { name: 'НДК', point: [23.3186, 42.6868], aliases: [] },
+  { name: 'Централна гара', point: [23.3203, 42.7116], aliases: [] }
 ];
 const metroStations = stopRows.filter(row => row[5] === 'metro');
 const surfaceStops = stopRows.filter(row => row[5] !== 'metro');
@@ -60,6 +71,8 @@ let routePaths = null;
 let routePathsPromise = null;
 let selectedRouteId = null;
 let selectedVariantIndex = 0;
+let journeyNetwork = null;
+let selectedJourney = null;
 
 function iconSvg(mode) {
   const colors = { bus: '#e4b91b', tram: '#e87540', trolley: '#4689bc', metro: '#634ab8' };
@@ -183,6 +196,33 @@ function addRouteLayers() {
     paint: { 'circle-radius': 5, 'circle-color': '#ffffff',
       'circle-stroke-color': '#e87540', 'circle-stroke-width': 2.5 }
   });
+}
+
+function addJourneyLayers() {
+  map.addSource('journey-lines', { type: 'geojson', data: emptyCollection() });
+  map.addLayer({ id: 'journey-casing', type: 'line', source: 'journey-lines',
+    filter: ['==', ['get', 'type'], 'ride'],
+    layout: { 'line-cap': 'round', 'line-join': 'round' },
+    paint: { 'line-color': '#ffffff', 'line-width': 11, 'line-opacity': 0.96 } });
+  map.addLayer({ id: 'journey-rides', type: 'line', source: 'journey-lines',
+    filter: ['==', ['get', 'type'], 'ride'],
+    layout: { 'line-cap': 'round', 'line-join': 'round' },
+    paint: { 'line-color': ['match', ['get', 'mode'],
+      'tram', modeColors.tram, 'trolley', modeColors.trolley,
+      'metro', modeColors.metro, modeColors.bus], 'line-width': 6 } });
+  map.addLayer({ id: 'journey-walks', type: 'line', source: 'journey-lines',
+    filter: ['==', ['get', 'type'], 'walk'],
+    layout: { 'line-cap': 'round', 'line-join': 'round' },
+    paint: { 'line-color': '#344d53', 'line-width': 3, 'line-dasharray': [1.5, 2] } });
+  map.addSource('journey-points', { type: 'geojson', data: emptyCollection() });
+  map.addLayer({ id: 'journey-points', type: 'circle', source: 'journey-points',
+    paint: { 'circle-radius': ['match', ['get', 'kind'], 'endpoint', 12, 7],
+      'circle-color': ['match', ['get', 'kind'], 'endpoint', '#19383d', '#ffffff'],
+      'circle-stroke-color': '#ffffff', 'circle-stroke-width': 2.5 } });
+  map.addLayer({ id: 'journey-point-labels', type: 'symbol', source: 'journey-points',
+    filter: ['==', ['get', 'kind'], 'endpoint'],
+    layout: { 'text-field': ['get', 'label'], 'text-size': 11, 'text-font': ['Noto Sans Bold'] },
+    paint: { 'text-color': '#ffffff' } });
 }
 
 function lineLabel(routeId) {
@@ -313,6 +353,7 @@ async function showRoute(routeId, preferredStopId = null) {
       return;
     }
     selectedRouteId = routeId;
+    clearJourney();
     selectedVariantIndex = variants.reduce((best, variant, index) => {
       const score = variant.stops.length + (preferredStopId && variant.stops.includes(preferredStopId) ? 10000 : 0);
       const bestVariant = variants[best];
@@ -340,6 +381,61 @@ function clearRoute() {
   map.getSource('selected-route')?.setData(emptyCollection());
   map.getSource('route-stops')?.setData(emptyCollection());
   renderVehicles();
+}
+
+function clearJourney() {
+  selectedJourney = null;
+  $('#journey-result').hidden = true;
+  $('#journey-result').innerHTML = '';
+  map.getSource('journey-lines')?.setData(emptyCollection());
+  map.getSource('journey-points')?.setData(emptyCollection());
+}
+
+function drawJourney(origin, destination, result) {
+  if (!map.getSource('journey-lines')) return;
+  const features = result.legs.filter(leg => leg.points.length > 1).map(leg => ({
+    type: 'Feature', geometry: { type: 'LineString', coordinates: leg.points },
+    properties: { type: leg.type, mode: leg.mode || 'walk' }
+  }));
+  map.getSource('journey-lines').setData({ type: 'FeatureCollection', features });
+  const points = [
+    ...result.legs.filter(leg => leg.type === 'ride').flatMap(leg => [
+      { point: journeyNetwork.stopById.get(leg.fromId)?.point, kind: 'transfer' },
+      { point: journeyNetwork.stopById.get(leg.toId)?.point, kind: 'transfer' }
+    ]),
+    { point: origin.point, kind: 'endpoint', label: 'A' },
+    { point: destination.point, kind: 'endpoint', label: 'B' }
+  ].filter(item => item.point);
+  map.getSource('journey-points').setData({ type: 'FeatureCollection', features: points.map(item => ({
+    type: 'Feature', geometry: { type: 'Point', coordinates: item.point },
+    properties: { kind: item.kind, label: item.label || '' }
+  })) });
+  const bounds = [...features.flatMap(feature => feature.geometry.coordinates), origin.point, destination.point]
+    .reduce((box, point) => box.extend(point), new maplibregl.LngLatBounds(origin.point, origin.point));
+  map.fitBounds(bounds, { padding: 65, maxZoom: 15.5, duration: 650 });
+}
+
+function showJourney(origin, destination, result) {
+  clearRoute();
+  selectedJourney = { origin, destination, result };
+  const rides = result.legs.filter(leg => leg.type === 'ride');
+  const card = $('#journey-result');
+  card.hidden = false;
+  card.innerHTML = `<div class="journey-summary"><div><span class="panel-kicker">ТВОЯТ ПЪТ</span>
+    <strong>Около ${Math.ceil(result.minutes)} мин</strong><small>${result.transfers ? `${result.transfers} прекачвания` : 'Без прекачване'} · ${rides.length} ${rides.length === 1 ? 'линия' : 'линии'}</small></div>
+    <button type="button" id="close-journey" aria-label="Затвори маршрута">×</button></div>
+    <div class="journey-itinerary">${result.legs.map(leg => leg.type === 'ride'
+      ? `<div class="journey-leg"><span class="line-badge ${leg.mode}">${escapeHtml(routes[leg.routeId]?.name || leg.routeId)}</span>
+        <div><strong>${escapeHtml(modeNames[leg.mode])} ${escapeHtml(routes[leg.routeId]?.name || leg.routeId)}</strong>
+        <small>Към ${escapeHtml(leg.headsign || leg.toName)}</small>
+        <p>${escapeHtml(leg.fromName)} <span>→</span> ${escapeHtml(leg.toName)}</p>
+        <small>${leg.stopCount} ${leg.stopCount === 1 ? 'спирка' : 'спирки'} · ~${Math.ceil(leg.minutes)} мин</small></div></div>`
+      : `<div class="journey-leg walk"><span class="journey-walk-icon" aria-hidden="true">↝</span><div><strong>Пеша · ~${Math.max(1, Math.ceil(leg.minutes))} мин</strong>
+        <p>${escapeHtml(leg.fromName)} <span>→</span> ${escapeHtml(leg.toName)}</p></div></div>`).join('')}</div>
+    <p class="route-disclaimer">Ориентировъчно време по публикувания график с изчакване. Пешеходните връзки на картата са схематични. Провери часа на спирката преди тръгване.</p>`;
+  $('#close-journey').addEventListener('click', clearJourney);
+  drawJourney(origin, destination, result);
+  if (window.innerWidth <= 760) $('#live-map').scrollIntoView({ behavior: 'smooth' });
 }
 
 function wireMapClicks() {
@@ -391,6 +487,7 @@ map.on('load', async () => {
     await addIcons();
     addStopLayers();
     addRouteLayers();
+    addJourneyLayers();
     addVehicleLayers();
     wireMapClicks();
   } catch (error) {
@@ -541,6 +638,79 @@ for (const [name] of PLACES.sort((a, b) => a[0].localeCompare(b[0], 'bg'))) {
   option.value = name;
   options.appendChild(option);
 }
+
+const normalizePlace = value => value.trim().toLocaleLowerCase('bg-BG');
+const journeyLookup = new Map();
+const journeyOptions = $('#journey-options');
+function addJourneyOption(name, point, aliases = []) {
+  if (!journeyLookup.has(normalizePlace(name))) {
+    journeyLookup.set(normalizePlace(name), { name, point });
+    const option = document.createElement('option');
+    option.value = name;
+    journeyOptions.appendChild(option);
+  }
+  for (const alias of aliases) {
+    if (!journeyLookup.has(normalizePlace(alias))) journeyLookup.set(normalizePlace(alias), { name, point });
+  }
+}
+for (const place of JOURNEY_PLACES) addJourneyOption(place.name, place.point, place.aliases);
+for (const row of stopRows) {
+  if (!stopLines[row[0]]?.length) continue;
+  const label = `${row[2]} · ${row[5] === 'metro' ? 'метро' : `№ ${row[1] || row[0]}`}`;
+  const point = [row[4], row[3]];
+  addJourneyOption(label, point);
+  if (!journeyLookup.has(normalizePlace(row[2]))) journeyLookup.set(normalizePlace(row[2]), { name: row[2], point });
+}
+
+$('#journey-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  const origin = journeyLookup.get(normalizePlace($('#journey-from').value));
+  const destination = journeyLookup.get(normalizePlace($('#journey-to').value));
+  const message = $('#journey-message');
+  if (!origin || !destination) {
+    message.textContent = 'Избери начало и край от предложенията.';
+    message.classList.add('error');
+    return;
+  }
+  if (Math.abs(origin.point[0] - destination.point[0]) + Math.abs(origin.point[1] - destination.point[1]) < 0.0002) {
+    message.textContent = 'Избери две различни места.';
+    message.classList.add('error');
+    return;
+  }
+  const button = $('#journey-submit');
+  button.disabled = true;
+  message.classList.remove('error');
+  message.textContent = 'Търсим път по публикуваните линии…';
+  try {
+    const paths = await getRoutePaths();
+    if (!journeyNetwork) journeyNetwork = buildJourneyNetwork(paths, stopRows, routes);
+    const result = findJourney(journeyNetwork, origin, destination);
+    if (!result) {
+      message.textContent = 'Няма подходящ маршрут между тези места в публикуваната мрежа.';
+      message.classList.add('error');
+      clearJourney();
+      return;
+    }
+    message.textContent = `${origin.name} → ${destination.name}`;
+    showJourney(origin, destination, result);
+  } catch (error) {
+    console.warn('Pavet journey planner:', error);
+    message.textContent = 'Маршрутът не можа да се зареди. Опитай отново.';
+    message.classList.add('error');
+  } finally {
+    button.disabled = false;
+  }
+});
+$('#swap-journey').addEventListener('click', () => {
+  const from = $('#journey-from').value;
+  $('#journey-from').value = $('#journey-to').value;
+  $('#journey-to').value = from;
+});
+$('#journey-example').addEventListener('click', () => {
+  $('#journey-from').value = 'Център (Сердика)';
+  $('#journey-to').value = 'Mall of Sofia';
+  $('#journey-form').requestSubmit();
+});
 
 $('#place-form').addEventListener('submit', event => {
   event.preventDefault();

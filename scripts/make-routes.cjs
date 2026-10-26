@@ -4,6 +4,11 @@ const { parse } = require('csv-parse/sync');
 
 const STATIC_URL = 'https://gtfs.sofiatraffic.bg/api/v1/static';
 const round = number => Number(Number(number).toFixed(5));
+const timeMinutes = value => {
+  const parts = value?.split(':').map(Number);
+  return parts?.length === 3 && parts.every(Number.isFinite)
+    ? parts[0] * 60 + parts[1] + parts[2] / 60 : null;
+};
 
 // Keep the static site light while following the operator's actual shape.
 function simplify(points, tolerance = 0.00012) {
@@ -84,7 +89,9 @@ async function main() {
     stopLines.get(stopId).add(trip.route_id);
     if (representativeIds.has(row.trip_id)) {
       if (!representativeStops.has(row.trip_id)) representativeStops.set(row.trip_id, []);
-      representativeStops.get(row.trip_id).push([Number(row.stop_sequence), stopId]);
+      representativeStops.get(row.trip_id).push([
+        Number(row.stop_sequence), stopId, timeMinutes(row.departure_time || row.arrival_time)
+      ]);
     }
   }
   fs.writeFileSync('src/stop-lines.json', JSON.stringify(Object.fromEntries(
@@ -104,11 +111,12 @@ async function main() {
       .map(([, lng, lat]) => [lng, lat]);
     const path = simplify(points);
     if (path.length < 2) continue;
-    const stopIds = (representativeStops.get(trip.trip_id) || []).sort((a, b) => a[0] - b[0])
-      .map(([, id]) => id);
+    const timedStops = (representativeStops.get(trip.trip_id) || []).sort((a, b) => a[0] - b[0]);
+    const stopIds = timedStops.map(([, id]) => id);
+    const times = timedStops.map(([, , minutes]) => minutes === null ? null : Math.round(minutes * 10) / 10);
     if (!variants.has(trip.route_id)) variants.set(trip.route_id, []);
     variants.get(trip.route_id).push({
-      id: trip.shape_id, headsign: trip.trip_headsign || '', path, stops: stopIds
+      id: trip.shape_id, headsign: trip.trip_headsign || '', path, stops: stopIds, times
     });
   }
   fs.writeFileSync('route-paths.json', JSON.stringify(Object.fromEntries(variants)));
