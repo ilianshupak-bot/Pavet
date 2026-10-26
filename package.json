@@ -1,0 +1,29 @@
+{
+  "name": "pavet",
+  "version": "1.0.0",
+  "description": "Live Sofia public transport map",
+  "private": true,
+  "scripts": {
+    "build": "esbuild src/app.js --bundle --format=iife --minify --outfile=transport.js",
+    "update-routes": "node scripts/make-routes.cjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ilianshupak-bot/Pavet.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/ilianshupak-bot/Pavet/issues"
+  },
+  "homepage": "https://github.com/ilianshupak-bot/Pavet#readme",
+  "dependencies": {
+    "gtfs-realtime-bindings": "^2.2.0"
+  },
+  "devDependencies": {
+    "adm-zip": "^0.6.1",
+    "csv-parse": "^7.0.3",
+    "esbuild": "^0.28.2"
+  }
+}
